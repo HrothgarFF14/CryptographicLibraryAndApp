@@ -38,4 +38,41 @@ public class KMACXOF256 {
         }
         return roundConstants;
     }
+
+    // TODO: Implement the keccakf function
+    public void keccakf() {
+        // This function will update the state with given number of rounds
+    }
+
+    // TODO: Implement the init function
+    public void init(int mdlen) {
+        // This function will initialize the context for KMACXOF256
+    }
+
+    // TODO: Implement the update function
+    public void update(byte[] data) {
+        // This function will update state with more data
+    }
+
+    // TODO: Implement the final function
+    public byte[] finalHash() {
+        // This function will finalize and output a hash
+        return null;
+    }
+
+    // TODO: Implement the KMACXOF256 function
+    public byte[] KMACXOF256(byte[] in, int mdlen) {
+        // This function will compute a KMACXOF256 hash of given byte length from "in"
+        return null;
+    }
+
+    // TODO: Implement the xof function
+    public void xof() {
+        // This function will provide the extensible-output functionality
+    }
+
+    // TODO: Implement the out function
+    public void out(byte[] out, int len) {
+        // This function will output the hash
+    }
 }
