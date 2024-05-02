@@ -39,40 +39,67 @@ public class KMACXOF256 {
         return roundConstants;
     }
 
-    // TODO: Implement the keccakf function
+
+    // The bytepad function pads the input string X with zeros until its length is a multiple of w bytes.
+    public byte[] bytepad(byte[] X, int w) {
+        // TODO: Implement the bytepad function
+
+        return null;
+    }
+
+    // The encode_string function prepends the bit length of the string S to the string itself.
+    public byte[] encode_string(byte[] S) {
+        // TODO: Implement the encode_string function
+        return null;
+    }
+
+    // The left_encode function encodes the integer x as a byte string in a specific format.
+    public byte[] left_encode(BigInteger x) {
+        // TODO: Implement the left_encode function
+        return null;
+    }
+
+    // The right_encode function also encodes the integer x as a byte string in a specific format.
+    public byte[] right_encode(BigInteger x) {
+        // TODO: Implement the right_encode function
+        return null;
+    }
+
+    // The keccakf function is the main part of the KMACXOF256 function. It involves several steps,
+    // including the θ, ρ, π, χ, and ι transformations, which involve various bitwise operations and permutations.
     public void keccakf() {
-        // This function will update the state with given number of rounds
+        // TODO: Implement the Keccak core algorithm
     }
 
-    // TODO: Implement the init function
+    // The init function initializes the state to zero, sets the message digest length and rate size, and resets the pointer.
     public void init(int mdlen) {
-        // This function will initialize the context for KMACXOF256
+        // TODO: Implement the init function
     }
 
-    // TODO: Implement the update function
+    // The update function absorbs each block of data into the state.
     public void update(byte[] data) {
-        // This function will update state with more data
+        // TODO: Implement the update function
     }
 
-    // TODO: Implement the final function
+    // The finalHash function applies padding and then extracts the output.
     public byte[] finalHash() {
-        // This function will finalize and output a hash
+        // TODO: Implement the final function
         return null;
     }
 
-    // TODO: Implement the KMACXOF256 function
+    // The KMACXOF256 function initializes the state, absorbs the input, and extracts the output.
     public byte[] KMACXOF256(byte[] in, int mdlen) {
-        // This function will compute a KMACXOF256 hash of given byte length from "in"
+        // TODO: Implement the KMACXOF256 function
         return null;
     }
 
-    // TODO: Implement the xof function
+    // The xof function switches to the squeezing phase.
     public void xof() {
-        // This function will provide the extensible-output functionality
+        // TODO: Implement the xof function
     }
 
-    // TODO: Implement the out function
+    // The out function extracts the output.
     public void out(byte[] out, int len) {
-        // This function will output the hash
+        // TODO: Implement the out function
     }
 }
