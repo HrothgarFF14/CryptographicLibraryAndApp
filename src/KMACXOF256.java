@@ -120,6 +120,15 @@ public class KMACXOF256 {
     // The update function absorbs each block of data into the state.
     public void update(byte[] data) {
         // TODO: Implement the update function
+        int j = pt;
+        for (int i = 0; i < data.length; i++) {
+            state[j++] = state[j++].xor(BigInteger.valueOf(data[i]));
+            if (j >= rateSize) {
+                keccakf();
+                j = 0;
+            }
+        }
+        pt = j;
     }
 
     // The finalHash function applies padding and then extracts the output.
@@ -138,7 +147,10 @@ public class KMACXOF256 {
 
     // The xof function switches to the squeezing phase.
     public void xof() {
-        // TODO: Implement the xof function
+        state[pt] = state[pt].xor(BigInteger.valueOf(0x1F));
+        state[rateSize - 1] = state[rateSize - 1].xor(BigInteger.valueOf(0x80));
+        keccakf();//Maybe wrong
+        pt = 0;
     }
 
     // The out function extracts the output.
