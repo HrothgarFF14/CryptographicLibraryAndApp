@@ -68,9 +68,31 @@ public class KMACXOF256 {
     }
 
     /// The left_encode function encodes the integer x as a byte string in a specific format.
-    public byte[] left_encode(BigInteger x) {
-        // TODO: Implement the left_encode function
-        return null;
+    public static byte[] left_encode(long x) {
+        if (x < 0 || x >= Math.pow(2, 2040)) {
+            throw new IllegalArgumentException("Value of x is out of valid range.");
+        }
+        int n = 1;
+        long power = 1;
+        while (power <= x) {
+            n++;
+            power *= 256;
+        }
+        byte[] encode = new byte[n + 1];
+        encode[0] = enc8(n);
+        for (int i = 1; i <= n; i++) {
+            byte xi = (byte) ((x >> (8 * (n - i))) & 0xFF);
+            encode[i] = xi;
+        }
+        return encode;
+    }
+    /// enc8 For an integer i ranging from 0 to 255, enc8(i) is the byte encoding of i,
+    //  with bit 0 being the low-order bit of the byte.
+    public static byte enc8(int i) {
+        if (i < 0 || i > 255) {
+            throw new IllegalArgumentException("Input i must be in the range [0, 255].");
+        }
+        return (byte) i;
     }
 
     // The right_encode function also encodes the integer x as a byte string in a specific format.
