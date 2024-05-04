@@ -154,6 +154,7 @@ public class KMACXOF256 {
         return finalHash();
     }
 
+    //test
     // The xof function switches to the squeezing phase.
     public void xof() {
         state[pt] = state[pt].xor(BigInteger.valueOf(0x1F));
