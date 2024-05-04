@@ -13,13 +13,13 @@ import java.util.Arrays;
 
 public class KMACXOF256 {
 
-    private byte[] inData;
+    byte[] inData;
     private static final BigInteger[] ROUND_CONSTANTS = initializeRoundConstants();
     private static final int[] KECCAKF_ROTC = {1,  3,  6,  10, 15, 21, 28, 36, 45, 55, 2,  14,
             27, 41, 56, 8,  25, 43, 62, 18, 39, 61, 20, 44};
     private static final int[] KECCAKF_PILN = {10, 7, 11, 17, 18, 3, 5, 16, 8, 21, 24, 4, 15, 23, 19, 13, 12, 2, 20, 14, 22, 9, 6, 1};
 
-    private BigInteger[] state;
+    BigInteger[] state;
     private int messageDigestLength;
     private int rateSize;
     private int pt;
@@ -185,7 +185,7 @@ public class KMACXOF256 {
     }
 
 
-    private static byte[] right_encode(int x) {
+    static byte[] right_encode(int x) {
         String binaryX = Integer.toBinaryString(x);
         String paddedX = multipleEight(binaryX);
         String length = Integer.toBinaryString(binaryX.length());
@@ -202,6 +202,11 @@ public class KMACXOF256 {
 
     // The keccakf function is the main part of the KMACXOF256 function. It involves several steps,
     // including the θ, ρ, π, χ, and ι transformations, which involve various bitwise operations and permutations.
+
+    /**
+     * The main part of the KMACXOF256 function. It involves several steps, including the θ, ρ, π, χ, and ι transformations.
+     * @param st The state
+     */
     public void keccakf(BigInteger[] st) {
         // TODO: Not sure it will be correct.
         long[] bc = new long[5];
@@ -259,8 +264,6 @@ public class KMACXOF256 {
         rateSize = 200 - 2 * mdlen;
         pt = 0;
     }
-
-    // The update function absorbs each block of data into the state.
 
     /**
      * Absorbs each block of data into the state.
@@ -333,7 +336,7 @@ public class KMACXOF256 {
      * @param len The length of the output data
      */
     public void out(byte[] out, int len) {
-        for (int i = 0; i < len; i++) {
+        for (int i = 0; i < len-1; i++) {
             if (pt == 0) {
                 keccakf(state);
             }
