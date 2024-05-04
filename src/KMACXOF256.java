@@ -13,6 +13,7 @@ import java.util.Arrays;
 
 public class KMACXOF256 {
 
+    private byte[] inData;
     private static final BigInteger[] ROUND_CONSTANTS = initializeRoundConstants();
     private static final int[] KECCAKF_ROTC = {1,  3,  6,  10, 15, 21, 28, 36, 45, 55, 2,  14,
             27, 41, 56, 8,  25, 43, 62, 18, 39, 61, 20, 44};
@@ -41,6 +42,13 @@ public class KMACXOF256 {
 
 
     // The bytepad function pads the input string X with zeros until its length is a multiple of w bytes.
+
+    /**
+     * Pads the input string X with zeros until its length is a multiple of w bytes.
+     * @param X The input string to be padded
+     * @param w the desired length of the padded string
+     * @return the padded string
+     */
     public byte[] bytepad(byte[] X, int w) {
         // TODO: Implement the bytepad function
         int paddingLength = w - (X.length % w);
@@ -52,6 +60,12 @@ public class KMACXOF256 {
     }
 
     // The encode_string function prepends the bit length of the string S to the string itself.
+
+    /**
+     * Prepends the bit length of the string S to the string itself.
+     * @param S The input string to be encoded
+     * @return the encoded string
+     */
     public byte[] encode_string(byte[] S) {
         // TODO: Implement the encode_string function
         int bitLength = S.length * 8; //calculate the bit length of the string
@@ -67,7 +81,67 @@ public class KMACXOF256 {
         return encoded;
     }
 
+    /**
+     * Returns CSHAKE (in terms of Keccak and SHAKE256) of the given goodies
+     *
+     * @param X The data for KECCAK to shake up.
+     * @param L The length of the digest desired to be returned.
+     * @param N Diversification string to augment output.
+     * @param S Diversification string to augment output.
+     * @return
+     */
+    public void cSHAKE256(byte[] X, int L, String N, String S){
+        // Convert the diversification strings to byte arrays
+        char[] flex = N.toCharArray();
+        byte[] x1 = new byte[flex.length];
+        for (int i = 0; i < flex.length; i++){
+            x1[i] = (byte)flex[i];
+        }
+        char[] flex2 = S.toCharArray();
+        byte[] x2 = new byte[flex2.length];
+        for (int i = 0; i < flex2.length; i++) {
+            x2[i] = (byte)flex2[i];
+        }
+
+        // Encode the diversification strings
+        byte[] n = encode_string(x1);
+        byte[] s = encode_string(x2);
+
+        // Combine the encoded diversification strings
+        byte[] newX = new byte[n.length + s.length];
+        for (int index = 0; index < n.length; index++) {
+            newX[index] = n[index];
+        }
+
+        for (int index = 0; index < s.length; index++) {
+            newX[index] = s[index];
+        }
+
+        // Pad the combined diversification strings
+        byte[] retStart = bytepad(newX, 136);
+
+        // Combine the padded diversification strings with the input data
+        byte[] ret = new byte[retStart.length + X.length + 2];
+
+        for (int index = 0; index < retStart.length; index++) {
+            ret[index] = retStart[index];
+        }
+        for (int index = 0; index < X.length; index++) {
+            ret[index] = X[index];
+        }
+        ret[ret.length-2] = 0;
+        ret[ret.length-1] = 0;
+
+        // Store the result in the inData field
+        inData = ret;
+    }
     /// The left_encode function encodes the integer x as a byte string in a specific format.
+
+    /**
+     * Encodes the integer x as a byte string in a specific format.
+     * @param x The integer to be encoded
+     * @return the encoded byte string
+     */
     public static byte[] left_encode(long x) {
         if (x < 0 || x >= Math.pow(2, 2040)) {
             throw new IllegalArgumentException("Value of x is out of valid range.");
@@ -86,8 +160,15 @@ public class KMACXOF256 {
         }
         return encode;
     }
+
     /// enc8 For an integer i ranging from 0 to 255, enc8(i) is the byte encoding of i,
     //  with bit 0 being the low-order bit of the byte.
+
+    /**
+     * For an integer i ranging as a byte
+     * @param i The integer to be encoded
+     * @return the encoded byte
+     */
     public static byte enc8(int i) {
         if (i < 0 || i > 255) {
             throw new IllegalArgumentException("Input i must be in the range [0, 255].");
@@ -108,6 +189,11 @@ public class KMACXOF256 {
     }
 
     // The init function initializes the state to zero, sets the message digest length and rate size, and resets the pointer.
+
+    /**
+     * Initializes the state to zero, sets the message digest length and rate size, and resets the pointer.
+     * @param mdlen The message digest length
+     */
     public void init(int mdlen) {
         // TODO: Implement the init function
         state = new BigInteger[25];
@@ -118,6 +204,11 @@ public class KMACXOF256 {
     }
 
     // The update function absorbs each block of data into the state.
+
+    /**
+     * Absorbs each block of data into the state.
+     * @param data The data to be absorbed
+     */
     public void update(byte[] data) {
         // TODO: Implement the update function
         int j = pt;
@@ -132,6 +223,11 @@ public class KMACXOF256 {
     }
 
     // The finalHash function applies padding and then extracts the output.
+
+    /**
+     * Applies padding and then extracts the output.
+     * @return the final hash
+     */
     public byte[] finalHash() {
         // apply padding
         state[pt] = state[pt].xor(BigInteger.valueOf(0x06));
@@ -147,6 +243,13 @@ public class KMACXOF256 {
     }
 
     // The KMACXOF256 function initializes the state, absorbs the input, and extracts the output.
+
+    /**
+     * Initializes the state, absorbs the input, and extracts the output.
+     * @param in The input data
+     * @param mdlen The message digest length
+     * @return the final hash
+     */
     public byte[] KMACXOF256(byte[] in, int mdlen) {
         // TODO: Implement the KMACXOF256 function
         init(mdlen);
@@ -154,8 +257,11 @@ public class KMACXOF256 {
         return finalHash();
     }
 
-    //test
     // The xof function switches to the squeezing phase.
+
+    /**
+     * Switches to the squeezing phase.
+     */
     public void xof() {
         state[pt] = state[pt].xor(BigInteger.valueOf(0x1F));
         state[rateSize - 1] = state[rateSize - 1].xor(BigInteger.valueOf(0x80));
@@ -164,6 +270,12 @@ public class KMACXOF256 {
     }
 
     // The out function extracts the output.
+
+    /**
+     * Extracts the output.
+     * @param out The output data
+     * @param len The length of the output data
+     */
     public void out(byte[] out, int len) {
         for (int i = 0; i < len; i++) {
             if (pt == 0) {
