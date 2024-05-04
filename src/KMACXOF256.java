@@ -52,7 +52,7 @@ public class KMACXOF256 {
     }
 
     // The encode_string function prepends the bit length of the string S to the string itself.
-    public static byte[] encode_string(byte[] S) {
+    public byte[] encode_string(byte[] S) {
         // TODO: Implement the encode_string function
         int bitLength = S.length * 8; //calculate the bit length of the string
         byte[] bitLengthBytes = BigInteger.valueOf(bitLength).toByteArray(); //convert the bit length to a byte array
@@ -66,53 +66,39 @@ public class KMACXOF256 {
 
         return encoded;
     }
-    private static String multipleOfEight(String binaryString) {
-        int remainder = binaryString.length() % 8;
-        if (remainder != 0) {
-            int paddingLength = 8 - remainder;
-            StringBuilder zeros = new StringBuilder();
-            for (int i = 0; i < paddingLength; i++) {
-                zeros.append("0");
-            }
-            binaryString = zeros.toString() + binaryString;
-        }
-        return binaryString;
-    }
 
     /// The left_encode function encodes the integer x as a byte string in a specific format.
-    public static byte[] left_encode(int x) {
-
-        String binaryX = Integer.toBinaryString(x);
-        String paddedX = multipleOfEight(binaryX);
-        String binaryLength = Integer.toBinaryString(binaryX.length());
-        String paddedLength = multipleOfEight(binaryLength);
-        String encodedString = paddedLength + paddedX;
-
-        // Convert the encoded string to a byte array
-        byte[] encodedBytes = new byte[encodedString.length() / 8];
-        for (int i = 0; i < encodedString.length(); i += 8) {
-            String byteString = encodedString.substring(i, i + 8);
-            encodedBytes[i / 8] = (byte) Integer.parseInt(byteString, 2);
+    public static byte[] left_encode(long x) {
+        if (x < 0 || x >= Math.pow(2, 2040)) {
+            throw new IllegalArgumentException("Value of x is out of valid range.");
         }
-        return encodedBytes;
+        int n = 1;
+        long power = 1;
+        while (power <= x) {
+            n++;
+            power *= 256;
+        }
+        byte[] encode = new byte[n + 1];
+        encode[0] = enc8(n);
+        for (int i = 1; i <= n; i++) {
+            byte xi = (byte) ((x >> (8 * (n - i))) & 0xFF);
+            encode[i] = xi;
+        }
+        return encode;
+    }
+    /// enc8 For an integer i ranging from 0 to 255, enc8(i) is the byte encoding of i,
+    //  with bit 0 being the low-order bit of the byte.
+    public static byte enc8(int i) {
+        if (i < 0 || i > 255) {
+            throw new IllegalArgumentException("Input i must be in the range [0, 255].");
+        }
+        return (byte) i;
     }
 
-
-    public static byte[] right_encode(int x) {
-
-        String binaryX = Integer.toBinaryString(x);
-        String paddedX = multipleOfEight(binaryX);
-        String binaryLength = Integer.toBinaryString(binaryX.length());
-        String paddedLength = multipleOfEight(binaryLength);
-        String encodedString = paddedX + paddedLength;
-
-        // Convert the encoded string to a byte array
-        byte[] encodedBytes = new byte[encodedString.length() / 8];
-        for (int i = 0; i < encodedString.length(); i += 8) {
-            String byteString = encodedString.substring(i, i + 8);
-            encodedBytes[i / 8] = (byte) Integer.parseInt(byteString, 2);
-        }
-        return encodedBytes;
+    // The right_encode function also encodes the integer x as a byte string in a specific format.
+    public byte[] right_encode(BigInteger x) {
+        // TODO: Implement the right_encode function
+        return null;
     }
 
     // The keccakf function is the main part of the KMACXOF256 function. It involves several steps,
@@ -134,6 +120,15 @@ public class KMACXOF256 {
     // The update function absorbs each block of data into the state.
     public void update(byte[] data) {
         // TODO: Implement the update function
+        int j = pt;
+        for (int i = 0; i < data.length; i++) {
+            state[j++] = state[j++].xor(BigInteger.valueOf(data[i]));
+            if (j >= rateSize) {
+                keccakf();
+                j = 0;
+            }
+        }
+        pt = j;
     }
 
     // The finalHash function applies padding and then extracts the output.
@@ -152,7 +147,10 @@ public class KMACXOF256 {
 
     // The xof function switches to the squeezing phase.
     public void xof() {
-        // TODO: Implement the xof function
+        state[pt] = state[pt].xor(BigInteger.valueOf(0x1F));
+        state[rateSize - 1] = state[rateSize - 1].xor(BigInteger.valueOf(0x80));
+        keccakf();//Maybe wrong
+        pt = 0;
     }
 
     // The out function extracts the output.
