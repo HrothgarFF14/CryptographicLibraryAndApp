@@ -42,7 +42,6 @@ public class KMACXOF256 {
 
     // The bytepad function pads the input string X with zeros until its length is a multiple of w bytes.
     public byte[] bytepad(byte[] X, int w) {
-        // TODO: Implement the bytepad function
         int paddingLength = w - (X.length % w);
         byte[] padded = new byte[X.length + paddingLength];
         for (int i = X.length; i < padded.length; i++) {
@@ -53,7 +52,6 @@ public class KMACXOF256 {
 
     // The encode_string function prepends the bit length of the string S to the string itself.
     public byte[] encode_string(byte[] S) {
-        // TODO: Implement the encode_string function
         int bitLength = S.length * 8; //calculate the bit length of the string
         byte[] bitLengthBytes = BigInteger.valueOf(bitLength).toByteArray(); //convert the bit length to a byte array
 
@@ -109,7 +107,6 @@ public class KMACXOF256 {
 
     // The init function initializes the state to zero, sets the message digest length and rate size, and resets the pointer.
     public void init(int mdlen) {
-        // TODO: Implement the init function
         state = new BigInteger[25];
         Arrays.fill(state, BigInteger.ZERO);
         messageDigestLength = mdlen;
@@ -119,7 +116,6 @@ public class KMACXOF256 {
 
     // The update function absorbs each block of data into the state.
     public void update(byte[] data) {
-        // TODO: Implement the update function
         int j = pt;
         for (int i = 0; i < data.length; i++) {
             state[j++] = state[j++].xor(BigInteger.valueOf(data[i]));
@@ -139,7 +135,6 @@ public class KMACXOF256 {
 
     // The KMACXOF256 function initializes the state, absorbs the input, and extracts the output.
     public byte[] KMACXOF256(byte[] in, int mdlen) {
-        // TODO: Implement the KMACXOF256 function
         init(mdlen);
         update(in);
         return finalHash();
