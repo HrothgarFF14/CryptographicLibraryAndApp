@@ -133,8 +133,17 @@ public class KMACXOF256 {
 
     // The finalHash function applies padding and then extracts the output.
     public byte[] finalHash() {
-        // TODO: Implement the final function
-        return null;
+        // apply padding
+        state[pt] = state[pt].xor(BigInteger.valueOf(0x06));
+        state[rateSize - 1] = state[rateSize - 1].xor(BigInteger.valueOf(0x80));
+        keccakf();
+
+        // Extract the output
+        byte[] output = new byte[messageDigestLength];
+        for (int i = 0; i < messageDigestLength; i++) {
+            output[i] = state[i].byteValue();
+        }
+        return output;
     }
 
     // The KMACXOF256 function initializes the state, absorbs the input, and extracts the output.
@@ -155,6 +164,12 @@ public class KMACXOF256 {
 
     // The out function extracts the output.
     public void out(byte[] out, int len) {
-        // TODO: Implement the out function
-    }
+        for (int i = 0; i < len; i++) {
+            if (pt == 0) {
+                keccakf();
+            }
+        }
+        out[i] = state[pt].byteValue();
+        pt = (pt + 1) % rateSize;
+    }       
 }
