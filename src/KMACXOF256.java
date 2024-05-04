@@ -202,8 +202,48 @@ public class KMACXOF256 {
 
     // The keccakf function is the main part of the KMACXOF256 function. It involves several steps,
     // including the θ, ρ, π, χ, and ι transformations, which involve various bitwise operations and permutations.
-    public void keccakf() {
-        // TODO: Implement the Keccak core algorithm
+    public void keccakf(BigInteger[] st) {
+        // TODO: Not sure it will be correct.
+        long[] bc = new long[5];
+        long t;
+
+        for (int r = 0; r < 24; r++) {
+            // Theta
+            for (int i = 0; i < 5; i++)
+                bc[i] = st[i].xor(st[i + 5].xor(st[i + 10].xor(st[i + 15].xor(st[i + 20])))).longValue();
+
+            for (int i = 0; i < 5; i++) {
+                t = bc[(i + 4) % 5] ^ ROTL64(bc[(i + 1) % 5], 1);
+                for (int j = 0; j < 25; j += 5) {
+                    st[j + i] = st[j + i].xor(BigInteger.valueOf(t));
+                }
+            }
+
+            // Rho Pi
+            t = st[1].longValue();
+            for (int i = 0; i < 24; i++) {
+                int j = KECCAKF_PILN[i];
+                bc[0] = st[j].longValue();
+                st[j] = BigInteger.valueOf(ROTL64(t, KECCAKF_ROTC[i]));
+                t = bc[0];
+            }
+
+            // Chi
+            for (int j = 0; j < 25; j += 5) {
+                for (int i = 0; i < 5; i++)
+                    bc[i] = st[j + i].longValue();
+                for (int i = 0; i < 5; i++) {
+                    st[j + i] = st[j + i].xor(BigInteger.valueOf((~bc[(i + 1) % 5]) & bc[(i + 2) % 5]));
+                }
+            }
+
+            // Iota
+            st[0] = st[0].xor(ROUND_CONSTANTS[r]);
+        }
+    }
+
+    private static long ROTL64(long x, int y) {
+        return (x << y) | (x >>> (64 - y));
     }
 
     // The init function initializes the state to zero, sets the message digest length and rate size, and resets the pointer.
@@ -231,7 +271,7 @@ public class KMACXOF256 {
         for (int i = 0; i < data.length; i++) {
             state[j++] = state[j++].xor(BigInteger.valueOf(data[i]));
             if (j >= rateSize) {
-                keccakf();
+                keccakf(state);
                 j = 0;
             }
         }
@@ -248,7 +288,7 @@ public class KMACXOF256 {
         // apply padding
         state[pt] = state[pt].xor(BigInteger.valueOf(0x06));
         state[rateSize - 1] = state[rateSize - 1].xor(BigInteger.valueOf(0x80));
-        keccakf();
+        keccakf(state);
 
         // Extract the output
         byte[] output = new byte[messageDigestLength];
@@ -281,7 +321,7 @@ public class KMACXOF256 {
     public void xof() {
         state[pt] = state[pt].xor(BigInteger.valueOf(0x1F));
         state[rateSize - 1] = state[rateSize - 1].xor(BigInteger.valueOf(0x80));
-        keccakf();//Maybe wrong
+        keccakf(state);
         pt = 0;
     }
 
@@ -295,7 +335,7 @@ public class KMACXOF256 {
     public void out(byte[] out, int len) {
         for (int i = 0; i < len; i++) {
             if (pt == 0) {
-                keccakf();
+                keccakf(state);
             }
             out[i] = state[pt].byteValue();
             pt = (pt + 1) % rateSize;
