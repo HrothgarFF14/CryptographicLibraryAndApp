@@ -50,7 +50,6 @@ public class KMACXOF256 {
      * @return the padded string
      */
     public byte[] bytepad(byte[] X, int w) {
-        // TODO: Implement the bytepad function
         int paddingLength = w - (X.length % w);
         byte[] padded = new byte[X.length + paddingLength];
         for (int i = X.length; i < padded.length; i++) {
@@ -67,7 +66,6 @@ public class KMACXOF256 {
      * @return the encoded string
      */
     public byte[] encode_string(byte[] S) {
-        // TODO: Implement the encode_string function
         int bitLength = S.length * 8; //calculate the bit length of the string
         byte[] bitLengthBytes = BigInteger.valueOf(bitLength).toByteArray(); //convert the bit length to a byte array
 
@@ -195,7 +193,6 @@ public class KMACXOF256 {
      * @param mdlen The message digest length
      */
     public void init(int mdlen) {
-        // TODO: Implement the init function
         state = new BigInteger[25];
         Arrays.fill(state, BigInteger.ZERO);
         messageDigestLength = mdlen;
@@ -210,7 +207,6 @@ public class KMACXOF256 {
      * @param data The data to be absorbed
      */
     public void update(byte[] data) {
-        // TODO: Implement the update function
         int j = pt;
         for (int i = 0; i < data.length; i++) {
             state[j++] = state[j++].xor(BigInteger.valueOf(data[i]));
