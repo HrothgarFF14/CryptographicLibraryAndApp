@@ -168,8 +168,8 @@ public class KMACXOF256 {
             if (pt == 0) {
                 keccakf();
             }
+            out[i] = state[pt].byteValue();
+            pt = (pt + 1) % rateSize;
         }
-        out[i] = state[pt].byteValue();
-        pt = (pt + 1) % rateSize;
-    }       
+    }
 }
