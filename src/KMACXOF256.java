@@ -89,6 +89,8 @@ public class KMACXOF256 {
      * @return
      */
     public void cSHAKE256(byte[] X, int L, String N, String S){
+
+        init(512);
         // Convert the diversification strings to byte arrays
         char[] flex = N.toCharArray();
         byte[] x1 = new byte[flex.length];
@@ -292,7 +294,8 @@ public class KMACXOF256 {
 
         // Extract the output
         byte[] output = new byte[messageDigestLength];
-        for (int i = 0; i < messageDigestLength; i++) {
+        int length = Math.min(messageDigestLength, state.length);
+        for (int i = 0; i < length; i++) {
             output[i] = state[i].byteValue();
         }
         return output;
