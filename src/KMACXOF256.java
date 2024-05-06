@@ -258,7 +258,7 @@ public class KMACXOF256 {
         state = new BigInteger[25];
         Arrays.fill(state, BigInteger.ZERO);
         messageDigestLength = mdlen;
-        rateSize = Math.max(0, (200 - 2 * mdlen) / 8);
+        rateSize = Math.max(1, (200 - 2 * mdlen) / 8);
         pt = 0;
     }
 
@@ -271,11 +271,11 @@ public class KMACXOF256 {
     public void update(byte[] data) {
         int j = pt;
         for (int i = 0; i < data.length; i++) {
-            if (j >= state.length) {
+            state[j++] = state[j++].xor(BigInteger.valueOf(data[i]));
+            if (j >= rateSize) {
                 keccakf(state);
                 j = 0;
             }
-            state[j++] = state[j++].xor(BigInteger.valueOf(data[i]));
         }
         pt = j;
     }
@@ -287,19 +287,18 @@ public class KMACXOF256 {
      * @return the final hash
      */
     public byte[] finalHash() {
-        // apply padding
         state[pt] = state[pt].xor(BigInteger.valueOf(0x06));
         state[rateSize - 1] = state[rateSize - 1].xor(BigInteger.valueOf(0x80));
         keccakf(state);
 
-        // Extract the output
         byte[] output = new byte[messageDigestLength];
-        int length = Math.min(messageDigestLength, state.length);
+        int length = Math.min(messageDigestLength, state.length); // Use Math.min to avoid out-of-bounds access
         for (int i = 0; i < length; i++) {
             output[i] = state[i].byteValue();
         }
         return output;
     }
+
 
     // The KMACXOF256 function initializes the state, absorbs the input, and extracts the output.
 
@@ -321,7 +320,6 @@ public class KMACXOF256 {
      * Switches to the squeezing phase.
      */
     public void xof() {
-
         state[pt] = state[pt].xor(BigInteger.valueOf(0x1F));
         state[rateSize - 1] = state[rateSize - 1].xor(BigInteger.valueOf(0x80));
         keccakf(state);
