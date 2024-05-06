@@ -48,6 +48,7 @@ public class KMACXOF256 {
      * @param X The input string to be padded
      * @param w the desired length of the padded string
      * @return the padded string
+     * @author Louis Lomboy
      */
     public byte[] bytepad(byte[] X, int w) {
         int paddingLength = w - (X.length % w);
@@ -64,6 +65,7 @@ public class KMACXOF256 {
      * Prepends the bit length of the string S to the string itself.
      * @param S The input string to be encoded
      * @return the encoded string
+     * @author Louis Lomboy
      */
     public byte[] encode_string(byte[] S) {
         int bitLength = S.length * 8; //calculate the bit length of the string
@@ -87,6 +89,7 @@ public class KMACXOF256 {
      * @param N Diversification string to augment output.
      * @param S Diversification string to augment output.
      * @return
+     * @author Louis Lomboy and Ahmed Mohamed
      */
     public void cSHAKE256(byte[] X, int L, String N, String S){
 
@@ -141,6 +144,7 @@ public class KMACXOF256 {
      * Encodes the integer x as a byte string in a specific format.
      * @param x The integer to be encoded
      * @return the encoded byte string
+     * @author Ahmed Mohamed
      */
     public static byte[] left_encode(int x) {
         String binaryX = Integer.toBinaryString(x);
@@ -166,6 +170,7 @@ public class KMACXOF256 {
      * For an integer i ranging as a byte
      * @param i The integer to be encoded
      * @return the encoded byte
+     * @author Shu-Ren Shen
      */
     public static byte enc8(int i) {
         if (i < 0 || i > 255) {
@@ -186,7 +191,12 @@ public class KMACXOF256 {
         return binaryString;
     }
 
-
+    /**
+     * Encodes the integer x as a byte string in a specific format.
+     * @param x The integer to be encoded
+     * @return the encoded byte string
+     * @author Ahmed Mohamed
+     */
     private static byte[] right_encode(int x) {
         String binaryX = Integer.toBinaryString(x);
         String paddedX = multipleEight(binaryX);
@@ -204,6 +214,14 @@ public class KMACXOF256 {
 
     // The keccakf function is the main part of the KMACXOF256 function. It involves several steps,
     // including the θ, ρ, π, χ, and ι transformations, which involve various bitwise operations and permutations.
+
+    /**
+     * The main part of the KMACXOF256 function. It involves several steps, including the θ, ρ, π, χ, and ι transformations,
+     * which involve various bitwise operations and permutations.
+     *
+     * @param st The state of the Keccak function
+     * @author Shu-Ren Shen
+     */
     public void keccakf(BigInteger[] st) {
         // TODO: Not sure it will be correct.
         long[] bc = new long[5];
@@ -253,6 +271,7 @@ public class KMACXOF256 {
     /**
      * Initializes the state to zero, sets the message digest length and rate size, and resets the pointer.
      * @param mdlen The message digest length
+     * @author Louis Lomboy
      */
     public void init(int mdlen) {
         state = new BigInteger[25];
@@ -267,6 +286,7 @@ public class KMACXOF256 {
     /**
      * Absorbs each block of data into the state.
      * @param data The data to be absorbed
+     * @author Shu-Ren Shen
      */
     public void update(byte[] data) {
         int j = pt;
@@ -285,6 +305,7 @@ public class KMACXOF256 {
     /**
      * Applies padding and then extracts the output.
      * @return the final hash
+     * @author Ahmed Mohamed and Shu-Ren Shen
      */
     public byte[] finalHash() {
         state[pt] = state[pt].xor(BigInteger.valueOf(0x06));
@@ -307,6 +328,7 @@ public class KMACXOF256 {
      * @param in The input data
      * @param mdlen The message digest length
      * @return the final hash
+     * @author Louis Lomboy
      */
     public byte[] KMACXOF256(byte[] in, int mdlen) {
         init(mdlen);
@@ -318,6 +340,7 @@ public class KMACXOF256 {
 
     /**
      * Switches to the squeezing phase.
+     * @author Shu-Ren Shen
      */
     public void xof() {
         state[pt] = state[pt].xor(BigInteger.valueOf(0x1F));
@@ -332,6 +355,7 @@ public class KMACXOF256 {
      * Extracts the output.
      * @param out The output data
      * @param len The length of the output data
+     * @author Louis Lomboy, Ahmed Mohamed, and Shu-Ren Shen
      */
     public void out(byte[] out, int len) {
         for (int i = 0; i < len; i++) {
