@@ -310,7 +310,6 @@ public class KMACXOF256 {
      * @return the final hash
      */
     public byte[] KMACXOF256(byte[] in, int mdlen) {
-        // TODO: Implement the KMACXOF256 function
         init(mdlen);
         update(in);
         return finalHash();
