@@ -10,82 +10,112 @@ import java.util.Scanner;
 public class Main {
     private static final Scanner scanner = new Scanner(System.in);
     public static void main(String[] args) {
-        //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
-        // to see how IntelliJ IDEA suggests fixing it.
-        System.out.println("Cryptogtraphy Application by Louis Lomboy, Ahmed Mohamed and Shu-Ren Shen");
-
-        System.out.println("Enter mode of operation: " +
-                "\n1-Hash \n2-MAC \n3-Symmetric Encryption \n4-Symmetric Decryption");
-        String mode = scanner.nextLine();
-
-        System.out.println("Enter input method: \n1-File Input \n2-Console Input");
-        String inputMethod = scanner.nextLine();
-
-        System.out.println("Enter output method: \n1-File Output \n2-Console Output");
-        String outputMethod = scanner.nextLine();
-
-        switch (mode) {
-            case "1":
-                // Hash
-                byte[] data = getData(inputMethod);
-                byte[] hash = hashData(data);
-                outputData(hash, outputMethod);
-                break;
-            case "2":
-                // MAC
-                break;
-            case "3":
-                // Symmetric Encryption
-                break;
-            case "4":
-                // Symmetric Decryption
-                break;
-            default:
-                System.out.println("Invalid mode selected.");
-                break;
+        // Check if the correct number of arguments are provided
+        if (args.length < 3) {
+            System.out.println("Please provide the input file, output file, and password as command-line arguments.");
+            return;
         }
 
-        scanner.close();
-        System.out.println("---Done!---");
-    }
+        // Retrieve the arguments
+        String inputFile = args[0];
+        String outputFile = args[1];
+        String password = args[2];
 
-    private static byte[] getData(String inputMethod) {
-        if ("1".equals(inputMethod)) {
-            System.out.println("Enter file path:");
-            String filePath = scanner.nextLine();
-            try {
-                return Files.readAllBytes(Paths.get(filePath));
-            } catch (IOException e) {
-                System.out.println("Error reading file: " + e.getMessage());
+        String exit = "";
+        while (!"exit".equalsIgnoreCase(exit)) {
+            System.out.println("Cryptogtraphy Application by Louis Lomboy, Ahmed Mohamed and Shu-Ren Shen");
+
+            String mode = getInput("Enter mode of operation: \n1-Hash \n2-MAC \n3-Symmetric Encryption \n4-Symmetric Decryption");
+            byte[] data = getData(inputFile);
+            String passphrase = null;
+            if ("2".equals(mode) || "3".equals(mode) || "4".equals(mode)) {
+                passphrase = getInput("Enter passphrase:");
             }
-        } else if ("2".equals(inputMethod)) {
-            System.out.println("Enter data:");
-            String data = scanner.nextLine();
-            return data.getBytes();
+            switch (mode) {
+                case "1":
+                    outputData(hashKMAC(data), outputFile);
+                    break;
+                case "2":
+                    outputData(macKMAC(passphrase.getBytes(), data), outputFile);
+                    break;
+                case "3":
+                    symmetricEncryption(passphrase.getBytes(), data, outputFile);
+                    break;
+                case "4":
+                    // Symmetric Decryption
+                    break;
+                default:
+                    System.out.println("Invalid mode selected.");
+                    break;
+            }
+            System.out.println("*** Program Terminated ***");
+            exit = getInput("Enter 'exit' to terminate the program or press any key to continue.");
         }
-        return new byte[0];
+
     }
 
-    private static byte[] hashData(byte[] data) {
+    private static String getInput(String prompt) {
+        System.out.println(prompt);
+        return scanner.nextLine();
+    }
+
+    private static byte[] getData(String inputFile) {
+        try {
+            return Files.readAllBytes(Paths.get(inputFile));
+        } catch (IOException e) {
+            System.out.println("Error reading file: " + e.getMessage());
+            return new byte[0];
+        }
+    }
+
+    private static String readFile(String filePath) {
+        try {
+            return new String(Files.readAllBytes(Paths.get(filePath)));
+        } catch (IOException e) {
+            System.out.println("Error reading file: " + e.getMessage());
+            return "";
+        }
+    }
+
+    private static byte[] hashKMAC(byte[] data) {
         KMACXOF256 kmacxof256 = new KMACXOF256();
-        kmacxof256.KMACXOF256(data, 256);
+        kmacxof256.cSHAKE256(data, 512, "", "Email Signature");
+        kmacxof256.update(data);
         return kmacxof256.finalHash();
     }
 
-    private static void outputData(byte[] data, String outputMethod) {
-        if ("1".equals(outputMethod)) {
-            System.out.println("Enter output file path:");
-            String filePath = scanner.nextLine();
-            try (FileOutputStream fos = new FileOutputStream(filePath)) {
-                fos.write(data);
-            } catch (IOException e) {
-                System.out.println("Error writing to file: " + e.getMessage());
+    private static byte[] macKMAC(byte[] key, byte[] data) {
+        KMACXOF256 kmacxof256 = new KMACXOF256();
+        kmacxof256.cSHAKE256(key, 512, "", "Email Signature");
+        kmacxof256.update(data);
+        return kmacxof256.finalHash();
+    }
+
+    private static void symmetricEncryption(byte[] key, byte[] data, String outputChoice) {
+        // TODO: Implement symmetric encryption here
+    }
+
+    private static byte[] symmetricDecryption(byte[] iv, byte[] key, byte[] c, byte[] t) {
+        // TODO: Implement symmetric decryption here
+        return new byte[0];
+    }
+    private static void outputData(byte[] data, String outputFile) {
+        StringBuilder hexString = new StringBuilder();
+        for (byte b : data) {
+            String hex = Integer.toHexString(0xFF & b).toUpperCase();
+            if (hex.length() == 1) {
+                hexString.append('0');
             }
-        } else if ("2".equals(outputMethod)) {
-            for (byte b : data) {
-                System.out.print(String.format("%02X ", b));
-            }
-            System.out.println();
+            hexString.append(hex);
+            hexString.append(' ');
+        }
+        System.out.println("Output: " + hexString);
+
+        try (FileOutputStream fos = new FileOutputStream(outputFile)) {
+            fos.write(hexString.toString().getBytes());
+            System.out.println("Data written to " + outputFile);
+        } catch (IOException e) {
+            System.out.println("Error writing to file: " + e.getMessage());
         }
     }
 }
