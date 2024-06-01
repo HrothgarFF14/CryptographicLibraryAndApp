@@ -39,7 +39,7 @@ public class Main {
                     outputData(macKMAC(passphrase.getBytes(), data), outputFile);
                     break;
                 case "3":
-                    symmetricEncryption(passphrase.getBytes(), data, outputFile);
+                    //Symmetric Encryption
                     break;
                 case "4":
                     // Symmetric Decryption
