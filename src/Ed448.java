@@ -1,4 +1,5 @@
 import java.math.BigInteger;
+import java.security.KeyPair;
 
 import static java.math.BigInteger.ONE;
 
@@ -18,6 +19,19 @@ public class Ed448 {
         }
     }
 
+    /**
+     * Represents an elliptic curve public key.
+     */
+    public class ECPublicKey {
+        // TODO: Define the public key parameters and methods
+    }
+
+    /**
+     * Represents an elliptic curve private key.
+     */
+    public class ECPrivateKey {
+        // TODO: Define the private key parameters and methods
+    }
     // Constructor for the neutral element (0, 1)
     public void neutralPoint() {
         this.x = BigInteger.ZERO;
@@ -81,6 +95,57 @@ public class Ed448 {
     }
 
     /**
+     * Generates a public and private key pair for the elliptic curve cryptography
+     * @return A KeyPair object containing the public and private keys
+     */
+    public static KeyPair generateKeyPair() {
+        return null;
+    }
+
+    /**
+     * Encrypts a plaintext message using a given public key.
+     * @param publicKey The public key to use for encryption.
+     * @param plaintext The plaintext message to encrypt.
+     * @return The encrypted message.
+     */
+    public static byte[] encrypt(ECPublicKey publicKey, byte[] plaintext) {
+        return null;
+    }
+
+    /**
+     * Decrypts a ciphertext message using a given private key.
+     * @param privateKey The private key to use for decryption.
+     * @param ciphertext The ciphertext message to decrypt.
+     * @return The decrypted message.
+     */
+    public static byte[] decrypt(ECPrivateKey privateKey, byte[] ciphertext) {
+        return null;
+    }
+
+    /**
+     * Generates a digital signature for a given message using a given private key.
+     * @param privateKey The private key to use for signing.
+     * @param message The message to sign.
+     * @return The digital signature.
+     */
+    public static byte[] sign(ECPrivateKey privateKey, byte[] message) {
+        // TODO: Implement digital signature generation
+        return null;
+    }
+
+    /**
+     * Verifies a digital signature for a given message using a given public key.
+     * @param publicKey The public key to use for verification.
+     * @param message The message for which the signature was generated.
+     * @param signature The digital signature to verify.
+     * @return true if the signature is valid, false otherwise.
+     */
+    public static boolean verify(ECPublicKey publicKey, byte[] message, byte[] signature) {
+        // TODO: Implement digital signature verification
+        return false;
+    }
+
+    /**
      * Compute a square root of v mod p with a specified least-significant bit
      * if such a root exists.
      *
@@ -101,4 +166,6 @@ public class Ed448 {
         }
         return (r.multiply(r).subtract(v).mod(p).signum() == 0) ? r : null;
     }
+
+
 }
