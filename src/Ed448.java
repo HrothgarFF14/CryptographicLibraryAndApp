@@ -6,6 +6,7 @@ import static java.math.BigInteger.ONE;
 public class Ed448 {
     private static final BigInteger p = BigInteger.valueOf(2).pow(448).subtract(BigInteger.valueOf(2).pow(224)).subtract(ONE);
     private static final BigInteger d = BigInteger.valueOf(-39081);
+    private static final Ed448 netural = new Ed448(BigInteger.ZERO, BigInteger.ZERO);
 
     private BigInteger x;
     private BigInteger y;
@@ -71,16 +72,14 @@ public class Ed448 {
         return new Ed448(x3, y3);
     }
 
-    public  Ed448 P = new Ed448(BigInteger.ZERO, BigInteger.ZERO);
-    //ToDO  implement P
 
     // Scalar multiplication using the double-and-add algorithm
     public Ed448 scalarMultiply(BigInteger k) {
-        Ed448 V = P;
+        Ed448 V = netural;
         for (int i = k.bitLength() - 1; i >= 0; i--) {
             V = V.add(V);
             if (k.testBit(i)) {
-                V = V.add(P);
+                V = V.add(netural);
             }
         }
         return V;
