@@ -148,9 +148,43 @@ public class Ed448 {
      * @param privateKey The private key to use for decryption.
      * @param ciphertext The ciphertext message to decrypt.
      * @return The decrypted message.
+     * @author Louis Lomboy
      */
     public static byte[] decrypt(KeyPair privateKey, byte[] ciphertext) {
-        return null;
+        // Extract the cryptogram (Z, c, t) from the ciphertext
+        byte[] Z = Arrays.copyOfRange(ciphertext, 0, 56);
+        byte[] c = Arrays.copyOfRange(ciphertext, 56, ciphertext.length - 64);
+        byte[] t = Arrays.copyOfRange(ciphertext, ciphertext.length - 64, ciphertext.length);
+
+        // Compute s from the passphrase using KMACXOF256
+        byte[] s = KMACXOF256.KMACXOF256(privateKey.privateKey(), "".getBytes(), 448, "SK".getBytes());
+        BigInteger sNum = new BigInteger(1, s);
+        sNum = sNum.multiply(BigInteger.valueOf(4)).mod(r);
+
+        // Compute W from s and Z
+        Ed448 W = new Ed448(new BigInteger(Z), BigInteger.ZERO).scalarMultiply(sNum);
+
+        // Compute ka and ke from W using KMACXOF256
+        byte[] ka_ke = KMACXOF256.KMACXOF256(W.x.toByteArray(), "".getBytes(), 448 * 2, "PK".getBytes());
+        byte[] ka = Arrays.copyOfRange(ka_ke, 0, 56);
+        byte[] ke = Arrays.copyOfRange(ka_ke, 56, 112);
+
+        // Compute m from c and ke using KMACXOF256 and XOR operation
+        byte[] m = new byte[c.length];
+        byte[] keStream = KMACXOF256.KMACXOF256(ke, "".getBytes(), c.length * 8, "PKE".getBytes());
+        for (int i = 0; i < c.length; i++) {
+            m[i] = (byte) (c[i] ^ keStream[i]);
+        }
+
+        // Compute t' from ka and m using KMACXOF256
+        byte[] tPrime = KMACXOF256.KMACXOF256(ka, m, 448, "PKA".getBytes());
+
+        // Accept if, and only if, t' equals t
+        if (Arrays.equals(t, tPrime)) {
+            return m;
+        } else {
+            throw new IllegalArgumentException("Invalid ciphertext");
+        }
     }
 
     /**
