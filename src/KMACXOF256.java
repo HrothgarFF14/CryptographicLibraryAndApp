@@ -339,7 +339,6 @@ public class KMACXOF256 {
     }
 
     public static byte[] KMACXOF256(byte[] K, byte[] X, int L, byte[] S) {
-
         var newX = appendBytes(bytepad(encode_string(K), 136), X, right_encode(0));
         return cSHAKE256(newX, L, "KMAC", Arrays.toString(S));
     }
@@ -349,9 +348,8 @@ public class KMACXOF256 {
         for (var x : Xs) newlen += (x != null) ? x.length : 0;
 
         byte[] newXs = new byte[newlen];
-        int ptr = 0; // keep track of where we are in newXs while copying.
+        int ptr = 0;
         for (byte[] x : Xs) {
-            // copy each array from Xs into newXs.
             if (x == null) continue;
             System.arraycopy(x, 0, newXs, ptr, x.length);
             ptr += x.length;
@@ -388,11 +386,5 @@ public class KMACXOF256 {
             out[i] = state[pt].byteValue();
             pt = (pt + 1) % rateSize;
         }
-    }
-
-    public static byte[] xor(byte[] X, byte[] Y) {
-        // X xor Y for strings of arbitrary but equal bit length.
-        for (int i = 0; i < min(X.length, Y.length); i++) X[i] ^= Y[i];
-        return X;
     }
 }
