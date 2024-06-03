@@ -20,7 +20,12 @@ public class Ed448 {
     private BigInteger x;
     private BigInteger y;
 
-    // Constructor for a curve point given its x and y coordinates
+    /**
+     * Constructor for the Ed448 elliptic curve
+     * @param x The x-coordinate of the point
+     * @param y The y-coordinate of the point
+     * @author Ahmed Mohamed
+     */
     public Ed448(BigInteger x, BigInteger y) {
         this.x = x.mod(p);
         this.y = y.mod(p);
@@ -29,12 +34,20 @@ public class Ed448 {
         }
     }
 
-    // Constructor for the neutral element (0, 1)
+    /**
+     * Constructor for the neutral element of the curve
+     * @author AHmed Mohamed
+     */
     public Ed448() {
         this.x = BigInteger.ZERO;
         this.y = ONE;
     }
 
+    /**
+     * Generate a public and private key pair for the elliptic curve cryptography
+     * @return A KeyPair object containing the public and private keys
+     * @Author Shu-Ren Shen
+     */
     public class KeyPair{
         private byte[] PublicKey;
         private BigInteger PrivateKey;
@@ -52,27 +65,44 @@ public class Ed448 {
     }
 
 
-    // Check if the point is on the curve
+    /**
+     * Check if the point is on the curve
+     * @return true if the point is on the curve, false otherwise
+     * @Author Ahmed Mohamed and Shu-Ren Shen
+     */
     private boolean onCurve() {
         BigInteger left = (x.modPow(BigInteger.TWO, p).add(y.modPow(BigInteger.TWO, p)));
         BigInteger right = ONE.add(d).multiply((x.modPow(BigInteger.TWO, p).add(y.modPow(BigInteger.TWO, p))));
         return left.equals(right);
     }
 
-    // Compare two points for equality
+    /**
+     * Override the equals method to compare two Ed448 points
+     * @param obj The other Ed448 point to compare to the current point
+     * @return true if the two points are equal, false otherwise
+     * @author Ahmed Mohamed
+     */
     @Override
     public boolean equals(Object obj) {
         Ed448 temp = (Ed448) obj;
         return x.equals(temp.x) && y.equals(temp.y);
     }
 
-    // Get the opposite of a point (x, y) -> (-x, y)
-
+    /**
+     * Get the opposite point of the current point
+     * @return A new Ed448 point that is the opposite of the current point
+     * @author Ahmed Mohamed
+     */
     public Ed448 oppositePoint() {
         return new Ed448(x.negate(), y);
     }
 
-    // Add two points using the Edwards point addition formula
+    /**
+     * Add two points on the Ed448 elliptic curve
+     * @param temp the other Ed448 point to be added to the current point
+     * @return A new Ed448 point that is the result of the addition of the current point and the input point.
+     * @author Ahmed Mohamed and Shu-Ren Shen
+     *  */
     public Ed448 add(Ed448 temp) {
         BigInteger x1 = this.x;
         BigInteger y1 = this.y;
@@ -86,7 +116,12 @@ public class Ed448 {
     }
 
 
-    // Scalar multiplication using the double-and-add algorithm
+    /**
+     * Scalar multiplication of a point on the curve
+     * @param k The scalar to multiply the point by
+     * @return V The point on the curve after scalar multiplication by k
+     * @author Shu-Ren Shen
+     */
     public Ed448 scalarMultiply(BigInteger k) {
         Ed448 V = netural;
         for (int i = k.bitLength() - 1; i >= 0; i--) {
@@ -98,10 +133,20 @@ public class Ed448 {
         return V;
     }
 
+    /**
+     * Get the x-coordinate of the point
+     * @return x The x-coordinate of the point
+     * @author Ahmed Mohamed
+     */
     public BigInteger getX() {
         return x;
     }
 
+    /**
+     * Get the y-coordinate of the point
+     * @return y The y-coordinate of the point
+     * @author Ahmed Mohamed
+     */
     public BigInteger getY() {
         return y;
     }
@@ -109,6 +154,7 @@ public class Ed448 {
     /**
      * Generates a public and private key pair for the elliptic curve cryptography
      * @return A KeyPair object containing the public and private keys
+     * @author Shu-Ren Shen
      */
     public KeyPair generateKeyPair(byte[] pw) throws NoSuchAlgorithmException, InvalidKeySpecException {
         byte[] s = KMACXOF256.KMACXOF256(pw, "".getBytes(), 448, "SK".getBytes());
@@ -123,6 +169,7 @@ public class Ed448 {
      * @param V The public key to use for encryption.
      * @param plaintext The plaintext message to encrypt.
      * @return The encrypted message.
+     * @author Shu-Ren Shen
      */
     public byte[] encrypt(Ed448 V, byte[] plaintext) {
         Random RAND = new Random();
@@ -192,6 +239,7 @@ public class Ed448 {
      * @param privateKey The private key to use for signing.
      * @param message The message to sign.
      * @return The digital signature.
+     * @author Shu-Ren Shen
      */
     public static byte[] sign(KeyPair privateKey, byte[] message) {
         byte[] pw = privateKey.privateKey();
@@ -235,6 +283,7 @@ public class Ed448 {
      * @param lsb desired least significant bit (true: 1, false: 0).
      * @return a square root r of v mod p with r mod 2 = 1 iff lsb = true
      * if such a root exists, otherwise null.
+     * @author Shu-Ren Shen
      */
     public static BigInteger sqrt(BigInteger v, BigInteger p, boolean lsb) {
         assert (p.testBit(0) && p.testBit(1)); // p = 3 (mod 4)
