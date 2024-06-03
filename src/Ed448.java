@@ -1,12 +1,21 @@
 import java.math.BigInteger;
-import java.security.KeyPair;
+import java.security.*;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Arrays;
+import java.util.Random;
 
 import static java.math.BigInteger.ONE;
 
 public class Ed448 {
     private static final BigInteger p = BigInteger.valueOf(2).pow(448).subtract(BigInteger.valueOf(2).pow(224)).subtract(ONE);
     private static final BigInteger d = BigInteger.valueOf(-39081);
-    private static final Ed448 netural = new Ed448(BigInteger.ZERO, BigInteger.ZERO);
+    private static final Ed448 netural = new Ed448(BigInteger.ZERO, ONE);
+    private final static BigInteger r = (BigInteger.TWO).pow(446).subtract(
+            new BigInteger("13818066809895115352007386748515426880336692474882178609894547503885"));
+    public static Ed448 G = new Ed448(BigInteger.valueOf(8), BigInteger.valueOf(-3).mod(p));
+
 
     private BigInteger x;
     private BigInteger y;
@@ -19,19 +28,21 @@ public class Ed448 {
             throw new IllegalArgumentException("Point is not on the curve");
         }
     }
+    public class KeyPair{
+        // TODO: Define the public key parameters and methods+
+        private byte[] PublicKey;
+        private BigInteger PrivateKey;
+        public KeyPair(byte[] PublicKey,BigInteger PrivateKey){
+            this.PublicKey = PublicKey;
+            this.PrivateKey = PrivateKey;
+        }
+        public byte[] publicKey() {
+            return PublicKey;
+        }
+        public byte[] privateKey() {
+            return PrivateKey.toByteArray();
+        }
 
-    /**
-     * Represents an elliptic curve public key.
-     */
-    public class ECPublicKey {
-        // TODO: Define the public key parameters and methods
-    }
-
-    /**
-     * Represents an elliptic curve private key.
-     */
-    public class ECPrivateKey {
-        // TODO: Define the private key parameters and methods
     }
     // Constructor for the neutral element (0, 1)
     public void neutralPoint() {
@@ -97,18 +108,40 @@ public class Ed448 {
      * Generates a public and private key pair for the elliptic curve cryptography
      * @return A KeyPair object containing the public and private keys
      */
-    public static KeyPair generateKeyPair() {
-        return null;
+    public KeyPair generateKeyPair(byte[] pw) throws NoSuchAlgorithmException, InvalidKeySpecException {
+        byte[] s = KMACXOF256.KMACXOF256(pw, "".getBytes(), 448, "SK".getBytes());
+        BigInteger V = new BigInteger(s);
+        V = (BigInteger.valueOf(4)).multiply(V).mod(r);
+
+        return new KeyPair(s,V);
     }
 
     /**
      * Encrypts a plaintext message using a given public key.
-     * @param publicKey The public key to use for encryption.
+     * @param V The public key to use for encryption.
      * @param plaintext The plaintext message to encrypt.
      * @return The encrypted message.
      */
-    public static byte[] encrypt(ECPublicKey publicKey, byte[] plaintext) {
-        return null;
+    public byte[] encrypt(Ed448 V, byte[] plaintext) {
+        Random RAND = new Random();
+        BigInteger k = new BigInteger(448, RAND).shiftLeft(2).mod(r);
+
+        // W <- k *V;
+        Ed448 W = V.scalarMultiply(k);
+        // Z <- k*G
+        Ed448 Z = G.scalarMultiply(k);
+
+        byte[] ka_ke = KMACXOF256.KMACXOF256(W.x.toByteArray(), "".getBytes(), 448 * 2, "PK".getBytes());
+        byte[] ka = Arrays.copyOfRange(ka_ke, 0, 56);
+        byte[] ke = Arrays.copyOfRange(ka_ke, 56, 112);
+        byte[] c = KMACXOF256.KMACXOF256(ke, "".getBytes(), plaintext.length * 8, "PKE".getBytes());
+        byte[] t = KMACXOF256.KMACXOF256(ka, plaintext, 448, "PKA".getBytes());
+        byte[] leftEncodedC = KMACXOF256.encode_string(c);
+        byte[] leftEncodedT = KMACXOF256.encode_string(t);
+
+        return KMACXOF256.appendBytes(KMACXOF256.encode_string(Z.x.toByteArray()),
+                KMACXOF256.encode_string(Z.y.toByteArray()), leftEncodedC, leftEncodedT);
+
     }
 
     /**
@@ -117,7 +150,7 @@ public class Ed448 {
      * @param ciphertext The ciphertext message to decrypt.
      * @return The decrypted message.
      */
-    public static byte[] decrypt(ECPrivateKey privateKey, byte[] ciphertext) {
+    public static byte[] decrypt(KeyPair privateKey, byte[] ciphertext) {
         return null;
     }
 
@@ -127,9 +160,23 @@ public class Ed448 {
      * @param message The message to sign.
      * @return The digital signature.
      */
-    public static byte[] sign(ECPrivateKey privateKey, byte[] message) {
+    public static byte[] sign(KeyPair privateKey, byte[] message) {
         // TODO: Implement digital signature generation
-        return null;
+        byte[] pw = privateKey.privateKey();
+        //s  KMACXOF256(pw, “”, 448, “SK”);s  4s (mod r)
+        var s = new BigInteger(KMACXOF256.KMACXOF256(pw, "".getBytes(), 448, "SK".getBytes()))
+                .shiftLeft(2).mod(r);
+        // k  KMACXOF256(s, m, 448, “N”); k  4k (mod r)
+        BigInteger k = new BigInteger(KMACXOF256.KMACXOF256(s.toByteArray(), message, 448, "N".getBytes()))
+                .shiftLeft(2).mod(r);
+        // U  k*G;
+        var U = G.scalarMultiply(k);
+        // h  KMACXOF256(Ux, m, 448, “T”); z  (k – hs) mod r
+        byte[] h = new BigInteger(
+                KMACXOF256.KMACXOF256(U.x.toByteArray(), message, 448, "T".getBytes())).mod(r).toByteArray();
+        byte[] z = (k.subtract((new BigInteger(h)).multiply(s))).mod(r).toByteArray();
+        // signature: (h, z)
+        return KMACXOF256.appendBytes(KMACXOF256.encode_string(h), KMACXOF256.encode_string(z));
     }
 
     /**
@@ -139,8 +186,10 @@ public class Ed448 {
      * @param signature The digital signature to verify.
      * @return true if the signature is valid, false otherwise.
      */
-    public static boolean verify(ECPublicKey publicKey, byte[] message, byte[] signature) {
+    public static boolean verify(KeyPair publicKey, byte[] message, byte[] signature) {
         // TODO: Implement digital signature verification
+        byte[] pw = publicKey.publicKey();
+
         return false;
     }
 
