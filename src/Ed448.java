@@ -28,6 +28,13 @@ public class Ed448 {
             throw new IllegalArgumentException("Point is not on the curve");
         }
     }
+
+    // Constructor for the neutral element (0, 1)
+    public Ed448() {
+        this.x = BigInteger.ZERO;
+        this.y = ONE;
+    }
+
     public class KeyPair{
         private byte[] PublicKey;
         private BigInteger PrivateKey;
@@ -43,11 +50,7 @@ public class Ed448 {
         }
 
     }
-    // Constructor for the neutral element (0, 1)
-    public void neutralPoint() {
-        this.x = BigInteger.ZERO;
-        this.y = ONE;
-    }
+
 
     // Check if the point is on the curve
     private boolean onCurve() {
@@ -124,10 +127,7 @@ public class Ed448 {
     public byte[] encrypt(Ed448 V, byte[] plaintext) {
         Random RAND = new Random();
         BigInteger k = new BigInteger(448, RAND).shiftLeft(2).mod(r);
-
-        // W <- k *V;
         Ed448 W = V.scalarMultiply(k);
-        // Z <- k*G
         Ed448 Z = G.scalarMultiply(k);
 
         byte[] ka_ke = KMACXOF256.KMACXOF256(W.x.toByteArray(), "".getBytes(), 448 * 2, "PK".getBytes());
@@ -194,17 +194,12 @@ public class Ed448 {
      * @return The digital signature.
      */
     public static byte[] sign(KeyPair privateKey, byte[] message) {
-        // TODO: Implement digital signature generation
         byte[] pw = privateKey.privateKey();
-        //s  KMACXOF256(pw, “”, 448, “SK”);s  4s (mod r)
         var s = new BigInteger(KMACXOF256.KMACXOF256(pw, "".getBytes(), 448, "SK".getBytes()))
                 .shiftLeft(2).mod(r);
-        // k  KMACXOF256(s, m, 448, “N”); k  4k (mod r)
         BigInteger k = new BigInteger(KMACXOF256.KMACXOF256(s.toByteArray(), message, 448, "N".getBytes()))
                 .shiftLeft(2).mod(r);
-        // U  k*G;
         var U = G.scalarMultiply(k);
-        // h  KMACXOF256(Ux, m, 448, “T”); z  (k – hs) mod r
         byte[] h = new BigInteger(
                 KMACXOF256.KMACXOF256(U.x.toByteArray(), message, 448, "T".getBytes())).mod(r).toByteArray();
         byte[] z = (k.subtract((new BigInteger(h)).multiply(s))).mod(r).toByteArray();
@@ -221,16 +216,11 @@ public class Ed448 {
      * @author Louis Lomboy
      */
     public static boolean verify(KeyPair publicKey, byte[] message, byte[] signature) {
-        // Extract h and z from the signature
         byte[] h = Arrays.copyOfRange(signature, 0, 56);
         byte[] z = Arrays.copyOfRange(signature, 56, signature.length);
-
-        // Compute U from z, h, and the public key
         Ed448 U = G.scalarMultiply(new BigInteger(1, z))
                 .add(new Ed448(new BigInteger(1, publicKey.publicKey()), BigInteger.ZERO)
                         .scalarMultiply(new BigInteger(1, h)));
-
-        // Accept if, and only if, KMACXOF256(Ux, m, 448, “T”) = h
         byte[] hPrime = KMACXOF256.KMACXOF256(U.x.toByteArray(), message, 448, "T".getBytes());
 
         return Arrays.equals(h, hPrime);
