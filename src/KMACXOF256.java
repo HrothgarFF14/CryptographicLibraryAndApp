@@ -10,19 +10,20 @@ https://github.com/mjosaarinen/tiny_sha3/blob/master/sha3.c
 
 import java.math.BigInteger;
 import java.util.Arrays;
+import static java.lang.Math.min;
 
 public class KMACXOF256 {
 
-    private byte[] inData;
+    private static byte[] inData;
     private static final BigInteger[] ROUND_CONSTANTS = initializeRoundConstants();
     private static final int[] KECCAKF_ROTC = {1,  3,  6,  10, 15, 21, 28, 36, 45, 55, 2,  14,
             27, 41, 56, 8,  25, 43, 62, 18, 39, 61, 20, 44};
     private static final int[] KECCAKF_PILN = {10, 7, 11, 17, 18, 3, 5, 16, 8, 21, 24, 4, 15, 23, 19, 13, 12, 2, 20, 14, 22, 9, 6, 1};
 
-    private BigInteger[] state;
-    private int messageDigestLength;
-    private int rateSize;
-    private int pt;
+    private static BigInteger[] state;
+    private static int messageDigestLength;
+    private static int rateSize;
+    private static int pt;
 
     private static BigInteger[] initializeRoundConstants() {
         String[] roundConstantStrings = {
@@ -50,7 +51,7 @@ public class KMACXOF256 {
      * @return the padded string
      * @author Louis Lomboy
      */
-    public byte[] bytepad(byte[] X, int w) {
+    public static byte[] bytepad(byte[] X, int w) {
         int paddingLength = w - (X.length % w);
         byte[] padded = new byte[X.length + paddingLength];
         for (int i = X.length; i < padded.length; i++) {
@@ -67,9 +68,9 @@ public class KMACXOF256 {
      * @return the encoded string
      * @author Louis Lomboy
      */
-    public byte[] encode_string(byte[] S) {
+    public static byte[] encode_string(byte[] S) {
         int bitLength = S.length * 8; //calculate the bit length of the string
-        byte[] bitLengthBytes = BigInteger.valueOf(bitLength).toByteArray(); //convert the bit length to a byte array
+        byte[] bitLengthBytes = left_encode(bitLength); //convert the bit length to a byte array
 
         //create a new byte array with the length of the S plus the length of the bit length bytes
         byte[] encoded = new byte[S.length + bitLengthBytes.length];
@@ -91,7 +92,7 @@ public class KMACXOF256 {
      * @return
      * @author Louis Lomboy and Ahmed Mohamed
      */
-    public void cSHAKE256(byte[] X, int L, String N, String S){
+    public static byte[] cSHAKE256(byte[] X, int L, String N, String S){
 
         init(512);
         // Convert the diversification strings to byte arrays
@@ -137,6 +138,7 @@ public class KMACXOF256 {
 
         // Store the result in the inData field
         inData = ret;
+        return ret;
     }
     /// The left_encode function encodes the integer x as a byte string in a specific format.
 
@@ -273,7 +275,7 @@ public class KMACXOF256 {
      * @param mdlen The message digest length
      * @author Louis Lomboy
      */
-    public void init(int mdlen) {
+    public static void init(int mdlen) {
         state = new BigInteger[25];
         Arrays.fill(state, BigInteger.ZERO);
         messageDigestLength = mdlen;
@@ -336,6 +338,27 @@ public class KMACXOF256 {
         return finalHash();
     }
 
+    public static byte[] KMACXOF256(byte[] K, byte[] X, int L, byte[] S) {
+
+        var newX = appendBytes(bytepad(encode_string(K), 136), X, right_encode(0));
+        return cSHAKE256(newX, L, "KMAC", Arrays.toString(S));
+    }
+    public static byte[] appendBytes(byte[]... Xs) {
+        // count up the lengths to determine how long the new array is.
+        int newlen = 0;
+        for (var x : Xs) newlen += (x != null) ? x.length : 0;
+
+        byte[] newXs = new byte[newlen];
+        int ptr = 0; // keep track of where we are in newXs while copying.
+        for (byte[] x : Xs) {
+            // copy each array from Xs into newXs.
+            if (x == null) continue;
+            System.arraycopy(x, 0, newXs, ptr, x.length);
+            ptr += x.length;
+        }
+        return newXs;
+    }
+
     // The xof function switches to the squeezing phase.
 
     /**
@@ -365,5 +388,11 @@ public class KMACXOF256 {
             out[i] = state[pt].byteValue();
             pt = (pt + 1) % rateSize;
         }
+    }
+
+    public static byte[] xor(byte[] X, byte[] Y) {
+        // X xor Y for strings of arbitrary but equal bit length.
+        for (int i = 0; i < min(X.length, Y.length); i++) X[i] ^= Y[i];
+        return X;
     }
 }
