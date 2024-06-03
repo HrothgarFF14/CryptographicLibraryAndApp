@@ -162,7 +162,7 @@ public class Ed448 {
         sNum = sNum.multiply(BigInteger.valueOf(4)).mod(r);
 
         // Compute W from s and Z
-        Ed448 W = new Ed448(new BigInteger(Z), BigInteger.ZERO).scalarMultiply(sNum);
+        Ed448 W = new Ed448(new BigInteger(1, Z), BigInteger.ZERO).scalarMultiply(sNum);
 
         // Compute ka and ke from W using KMACXOF256
         byte[] ka_ke = KMACXOF256.KMACXOF256(W.x.toByteArray(), "".getBytes(), 448 * 2, "PK".getBytes());
@@ -218,12 +218,22 @@ public class Ed448 {
      * @param message The message for which the signature was generated.
      * @param signature The digital signature to verify.
      * @return true if the signature is valid, false otherwise.
+     * @author Louis Lomboy
      */
     public static boolean verify(KeyPair publicKey, byte[] message, byte[] signature) {
-        // TODO: Implement digital signature verification
-        byte[] pw = publicKey.publicKey();
+        // Extract h and z from the signature
+        byte[] h = Arrays.copyOfRange(signature, 0, 56);
+        byte[] z = Arrays.copyOfRange(signature, 56, signature.length);
 
-        return false;
+        // Compute U from z, h, and the public key
+        Ed448 U = G.scalarMultiply(new BigInteger(1, z))
+                .add(new Ed448(new BigInteger(1, publicKey.publicKey()), BigInteger.ZERO)
+                        .scalarMultiply(new BigInteger(1, h)));
+
+        // Accept if, and only if, KMACXOF256(Ux, m, 448, “T”) = h
+        byte[] hPrime = KMACXOF256.KMACXOF256(U.x.toByteArray(), message, 448, "T".getBytes());
+
+        return Arrays.equals(h, hPrime);
     }
 
     /**
