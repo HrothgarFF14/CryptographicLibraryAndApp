@@ -29,7 +29,6 @@ public class Ed448 {
         }
     }
     public class KeyPair{
-        // TODO: Define the public key parameters and methods+
         private byte[] PublicKey;
         private BigInteger PrivateKey;
         public KeyPair(byte[] PublicKey,BigInteger PrivateKey){
